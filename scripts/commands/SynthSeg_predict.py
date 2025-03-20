@@ -19,7 +19,11 @@ License.
 import os
 import sys
 from argparse import ArgumentParser
-
+import tensorflow as tf ## added to fix GPU memory issue
+physical_devices = tf.config.list_physical_devices('GPU')
+if physical_devices:
+    for device in physical_devices:
+        tf.config.experimental.set_memory_growth(device, True)
 # add main folder to python path and import ./SynthSeg/predict_synthseg.py
 synthseg_home = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[0]))))
 sys.path.append(synthseg_home)

@@ -12,7 +12,7 @@ volume_files=($(ls ${input_dir}/volume_*_type1.nii.gz))
 shuffled_files=($(shuf -e "${volume_files[@]}" | head -n 5))
 
 # Loop through the selected volumes and run the prediction script for each type
-for volume_file in "${shuffled_files[@]}"; do
+for volume_file in "${volume_files[@]}"; do
     # Extract the volume ID from the filename
     volume_id=$(basename "$volume_file" | cut -d'_' -f2)
     
