@@ -154,6 +154,8 @@ def predict(path_images,
     # build network
     _, _, n_dims, n_channels, _, _ = utils.get_volume_info(path_images[0])
     model_input_shape = [None] * n_dims + [n_channels]
+    print("---------------------------------------------------------*** input shape***-----------------------------------------------------------------")
+    print("model_input_shape: ", model_input_shape)
     net = build_model(path_model=path_model,
                       input_shape=model_input_shape,
                       labels_segmentation=labels_segmentation,
