@@ -1,0 +1,66 @@
+import nibabel as nib
+import numpy as np
+from scipy.ndimage import zoom
+import os
+
+# Function to resize volumes
+def resize_volume(volume, target_shape):
+    # Calculate zoom factors for each axis
+    zoom_factors = [target_shape[i] / volume.shape[i] for i in range(3)]
+    resized_volume = zoom(volume, zoom_factors, order=1)  # Use linear interpolation (order=1)
+    return resized_volume
+
+# Paths to your volumes and masks
+volume_directory = 'data/Brats/'  # Replace with your actual path
+save_volume_directory = 'data/Brats_resize/'  # Replace with your actual path
+
+# Loop over volumes (1 to 369)
+for vol_num in range(1, 370):
+    # Create lists to hold the different types of volumes (T1, T2, FLAIR)
+    volume_types = ['type1', 'type2', 'type3', 'type4']  # Adjust these based on your naming scheme
+    volumes = []
+    
+    # Load and resize each volume type
+    for vtype in volume_types:
+        volume_filename = os.path.join(volume_directory, f'volume_{vol_num}_{vtype}.nii.gz')
+        vol_img = nib.load(volume_filename)
+        vol_data = vol_img.get_fdata()
+        
+        # Resize volume from 160x160x160 to 260x260x260
+        resized_vol_data = resize_volume(vol_data, target_shape=(160, 160, 155))
+        volumes.append(resized_vol_data)
+    
+    # Combine all volumes into a 4D array
+    combined_volume = np.stack(volumes, axis=-1)  # Shape will be (260, 260, 260, 4)
+    
+    # Save the combined 4D volume
+    combined_volume_img = nib.Nifti1Image(combined_volume, vol_img.affine)
+    nib.save(combined_volume_img, os.path.join(save_volume_directory, f'combined_volume_{vol_num}.nii.gz'))
+    
+    # Initialize the final mask to zero
+    final_mask = np.zeros_like(resized_vol_data, dtype=int)
+
+    # Load and resize the 3 masks
+    mask_labels = [1, 2, 3]  # Labels for the three different masks
+    masks = []
+    for mask_type in range(1, 4):
+        mask_filename = os.path.join(volume_directory, f'volume_{vol_num}_mask{mask_type}.nii.gz')
+        mask_img = nib.load(mask_filename)
+        mask_data = mask_img.get_fdata()
+
+        # Resize mask from 160x160x160 to 260x260x260
+        resized_mask_data = resize_volume(mask_data, target_shape=(160, 160, 155))
+
+        # # Check for overlap and handle accordingly
+        # overlap_mask = (final_mask != 0) & (resized_mask_data != 0)
+        # if np.any(overlap_mask):
+        #     print(f"Warning: Overlap detected in volume {vol_num} for mask {mask_type}!")
+        #     print(f"Voxels in overlap with existing masks: {np.sum(overlap_mask)}")
+        
+        # Update the final mask: if the mask doesn't overwrite, mark the mask label
+        final_mask[resized_mask_data != 0] = mask_type
+    # Save the final mask
+    final_mask_img = nib.Nifti1Image(final_mask.astype(np.int32), mask_img.affine)
+    nib.save(final_mask_img, os.path.join(save_volume_directory, f'final_mask_{vol_num}.nii.gz'))
+
+print("Processing completed!")
