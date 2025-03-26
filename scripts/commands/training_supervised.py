@@ -15,21 +15,29 @@ License.
 
 
 # imports
+import yaml
 from argparse import ArgumentParser
 from SynthSeg.training_supervised import training
 from ext.lab2im.utils import infer
 
+with open("brats_training.yaml", "r") as f:
+    config = yaml.safe_load(f)
 parser = ArgumentParser()
 
 # ------------------------------------------------- General parameters -------------------------------------------------
 # Positional arguments
-parser.add_argument("image_dir", type=str)
-parser.add_argument("labels_dir", type=str)
-parser.add_argument("model_dir", type=str)
+# parser.add_argument("image_dir", type=str )#, default="data/Brats_resize/images")
+# parser.add_argument("labels_dir", type=str)#, default = "data/Brats_resize/masks")
+# parser.add_argument("model_dir", type=str)#, default = "models/")
+
+parser.add_argument("image_dir", type=str, default="data/Brats_resize/images/", help="Directory containing input images")
+parser.add_argument("labels_dir", type=str, default="data/Brats_resize/masks/", help="Directory containing segmentation masks")
+parser.add_argument("model_dir", type=str, default="models/", help="Directory for model output")
+
 
 # label maps parameters
-parser.add_argument("--segmentation_labels", type=str, dest="segmentation_labels", default=None)
-parser.add_argument("--neutral_labels", type=int, dest="n_neutral_labels", default=None)
+parser.add_argument("--segmentation_labels", type=str, dest="segmentation_labels", default="data/labels_classes_priors/brats_synthseg_segmentation_labels_2.0.npy")
+parser.add_argument("--neutral_labels", type=int, dest="n_neutral_labels", default=19)
 parser.add_argument("--subjects_prob", type=str, dest="subjects_prob", default=None)
 
 # output-related parameters
@@ -58,7 +66,7 @@ parser.add_argument("--thickness", dest="thickness", type=infer, default=None)
 parser.add_argument("--bias_std", type=float, dest="bias_field_std", default=.7)
 parser.add_argument("--bias_scale", type=float, dest="bias_scale", default=.025)
 
-parser.add_argument("--gradients", action='store_true', dest="return_gradients")
+#parser.add_argument("--gradients", action='store_true', dest="return_gradients")
 
 # -------------------------------------------- UNet architecture parameters --------------------------------------------
 parser.add_argument("--n_levels", type=int, dest="n_levels", default=5)
@@ -73,7 +81,7 @@ parser.add_argument("--lr", type=float, dest="lr", default=1e-4)
 parser.add_argument("--wl2_epochs", type=int, dest="wl2_epochs", default=1)
 parser.add_argument("--dice_epochs", type=int, dest="dice_epochs", default=50)
 parser.add_argument("--steps_per_epoch", type=int, dest="steps_per_epoch", default=10000)
-parser.add_argument("--checkpoint", type=str, dest="checkpoint", default=None)
+parser.add_argument("--checkpoint", type=str, dest="checkpoint", default="models/brats_synthseg_2.0.h5")
 
 args = parser.parse_args()
 training(**vars(args))

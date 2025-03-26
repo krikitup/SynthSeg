@@ -12,32 +12,26 @@ def resize_volume(volume, target_shape):
 
 # Paths to your volumes and masks
 volume_directory = 'data/Brats/'  # Replace with your actual path
-save_volume_directory = 'data/Brats_resize/'  # Replace with your actual path
-
+save_volume_directory = 'data/Brats_resize/images/'  # Replace with your actual path
+save_mask_dir = 'data/Brats_resize/masks/'
 # Loop over volumes (1 to 369)
 for vol_num in range(1, 370):
     # # Create lists to hold the different types of volumes (T1, T2, FLAIR)
-    # volume_types = ['type1', 'type2', 'type3', 'type4']  # Adjust these based on your naming scheme
-    # volumes = []
     
+    vol_num_str = f"{vol_num:03d}"
     # # Load and resize each volume type
-    # for vtype in volume_types:
-    #     volume_filename = os.path.join(volume_directory, f'volume_{vol_num}_{vtype}.nii.gz')
-    #     vol_img = nib.load(volume_filename)
-    #     vol_data = vol_img.get_fdata()
-        
-    #     # Resize volume from 160x160x160 to 260x260x260
-    #     resized_vol_data = resize_volume(vol_data, target_shape=(160, 160, 155))
-    #     volumes.append(resized_vol_data)
     
-    # # Combine all volumes into a 4D array
-    # combined_volume = np.stack(volumes, axis=-1)  # Shape will be (260, 260, 260, 4)
+    volume_filename = os.path.join(volume_directory, f'volume_{vol_num}_type1.nii.gz')
+    vol_img = nib.load(volume_filename)
+    vol_data = vol_img.get_fdata()
     
-    # # Save the combined 4D volume
-    # combined_volume_img = nib.Nifti1Image(combined_volume, vol_img.affine)
-    # nib.save(combined_volume_img, os.path.join(save_volume_directory, f'combined_volume_{vol_num}.nii.gz'))
+    # Resize volume from 160x160x160 to 260x260x260
+    resized_vol_data = resize_volume(vol_data, target_shape=(160, 160, 155))
+    # Save the combined 4D volume
+    fin_vol = nib.Nifti1Image(resized_vol_data, vol_img.affine)
+    nib.save(fin_vol, os.path.join(save_volume_directory, f'volume_{vol_num_str}.nii.gz'))
     
-    # Initialize the final mask to zero
+    # # Initialize the final mask to zero
     final_mask = np.zeros((160,160,155), dtype=int)
 
     # Load and resize the 3 masks
@@ -61,6 +55,6 @@ for vol_num in range(1, 370):
         final_mask[resized_mask_data != 0] = 100 +mask_type
     # Save the final mask
     final_mask_img = nib.Nifti1Image(final_mask.astype(np.int32), mask_img.affine)
-    nib.save(final_mask_img, os.path.join(save_volume_directory, f'final_mask_{vol_num}.nii.gz'))
+    nib.save(final_mask_img, os.path.join(save_mask_dir, f'volume_{vol_num}_mask.nii.gz'))
 
 print("Processing completed!")

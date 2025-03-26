@@ -1,0 +1,55 @@
+# General parameters
+image_dir: "data/Brats_resize/images"
+labels_dir: "data/Brats_resize/masks"
+
+model_dir : "models"
+chcekpoint: "models/brats_synthseg_2.0.h5"
+# Label maps parameters
+segmentation_labels: "data/labels_classes_priors/brats_synthseg_segmentation_labels_2.0.npy"
+segmentation_names: "data/labels_classes_priors/brats_synthseg_segmentation_names_2.0.npy"
+denoiser_labels: "data/labels_classes_priors/brats_synthseg_denoiser_labels_2.0.npy"
+topological_classes: "data/labels_classes_priors/brats_synthseg_topological_classes_2.0.npy"
+
+
+neutral_labels: 19
+subjects_prob: null
+
+# Output-related parameters
+batch_size: 2
+target_res: null
+output_shape: null
+
+# Augmentation parameters
+flipping: true
+scaling_bounds: 0.2
+rotation_bounds: 15
+shearing_bounds: 0.012
+translation_bounds: false
+nonlin_std: 4.0
+nonlin_scale: 0.04
+
+# Resampling parameters
+randomise_res: true
+max_res_iso: 4.0
+max_res_aniso: 8.0
+data_res: null
+thickness: null
+
+# Bias field parameters
+bias_field_std: 0.7
+bias_scale: 0.025
+
+# UNet architecture parameters
+n_levels: 5
+nb_conv_per_level: 2
+conv_size: 3
+unet_feat_count: 24
+feat_multiplier: 2
+activation: "elu"
+
+# Training parameters
+lr: 0.0001
+wl2_epochs: 5
+dice_epochs: 50
+steps_per_epoch: 185
+checkpoint: null
