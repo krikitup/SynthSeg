@@ -17,9 +17,12 @@ License.
 # imports
 import yaml
 from argparse import ArgumentParser
-from SynthSeg.training_supervised import training
-from ext.lab2im.utils import infer
 
+from ext.lab2im.utils import infer
+import importlib
+import SynthSeg.training_supervised  # Replace with the module you want to reload
+importlib.reload(SynthSeg.training_supervised)
+from SynthSeg.training_supervised import training
 with open("brats_training.yaml", "r") as f:
     config = yaml.safe_load(f)
 parser = ArgumentParser()
@@ -32,16 +35,16 @@ parser = ArgumentParser()
 
 parser.add_argument("image_dir", type=str, default="data/Brats_resize/images/", help="Directory containing input images")
 parser.add_argument("labels_dir", type=str, default="data/Brats_resize/masks/", help="Directory containing segmentation masks")
-parser.add_argument("model_dir", type=str, default="models/", help="Directory for model output")
+parser.add_argument("model_dir", type=str, default="models/brats/", help="Directory for model output")
 
 
 # label maps parameters
-parser.add_argument("--segmentation_labels", type=str, dest="segmentation_labels", default="data/labels_classes_priors/brats_synthseg_segmentation_labels_2.0.npy")
+parser.add_argument("--segmentation_labels", type=str, dest="segmentation_labels", default="data/labels_classes_priors/new_brats_synthseg_segmentation_labels_2.0.npy")
 parser.add_argument("--neutral_labels", type=int, dest="n_neutral_labels", default=19)
 parser.add_argument("--subjects_prob", type=str, dest="subjects_prob", default=None)
 
 # output-related parameters
-parser.add_argument("--batch_size", type=int, dest="batchsize", default=1)
+parser.add_argument("--batch_size", type=int, dest="batchsize", default = 1)
 parser.add_argument("--target_res", type=int, dest="target_res", default=None)
 parser.add_argument("--output_shape", type=int, dest="output_shape", default=None)
 
@@ -77,11 +80,12 @@ parser.add_argument("--feat_mult", type=int, dest="feat_multiplier", default=2)
 parser.add_argument("--activation", type=str, dest="activation", default='elu')
 
 # ------------------------------------------------- Training parameters ------------------------------------------------
-parser.add_argument("--lr", type=float, dest="lr", default=1e-4)
-parser.add_argument("--wl2_epochs", type=int, dest="wl2_epochs", default=1)
+parser.add_argument("--lr", type=float, dest="lr", default=1e-3)
+parser.add_argument("--wl2_epochs", type=int, dest="wl2_epochs", default=10)
 parser.add_argument("--dice_epochs", type=int, dest="dice_epochs", default=50)
-parser.add_argument("--steps_per_epoch", type=int, dest="steps_per_epoch", default=10000)
-parser.add_argument("--checkpoint", type=str, dest="checkpoint", default="models/brats_synthseg_2.0.h5")
+parser.add_argument("--steps_per_epoch", type=int, dest="steps_per_epoch", default=370)
+# parser.add_argument("--freezeLayer", action="store_true", dest="freezeLayer", help="Freeze all layers except the last two")
+parser.add_argument("--checkpoint", type=str, dest="checkpoint", default="models/dice_018.h5")
 
 args = parser.parse_args()
 training(**vars(args))

@@ -32,6 +32,7 @@ def metrics_model(input_model, label_list, metrics='dice'):
 
     # check shapes
     n_labels = input_shape[-1]
+    
     label_list = np.unique(label_list)
     assert n_labels == len(label_list), 'label_list should be as long as the posteriors channels'
 

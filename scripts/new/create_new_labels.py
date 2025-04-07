@@ -23,17 +23,17 @@ segmentation_names = np.load(os.path.join(label_dir, segmentation_names_path))
 denoiser_labels = np.load(os.path.join(label_dir, denoiser_labels_path))
 
 
-updated_topological_classes = np.concatenate((topological_classes, np.ones(num_new_classes)*unique_num))
-updated_segmentation_labels = np.concatenate((segmentation_labels, np.arange(unique_num + 1, unique_num + num_new_classes+ 1)))
-new_names = np.array(['tumor', 'tumor-core', 'tumor-enhancing'])
-updated_segmentation_names = np.concatenate((segmentation_names, new_names))
-updated_denoiser_labels = np.concatenate((denoiser_labels, np.ones(num_new_classes)))
+new_topological_classes = np.concatenate((np.array([0]), np.ones(num_new_classes)*unique_num))
+new_segmentation_labels = np.concatenate((np.array([0]), np.arange(unique_num + 1, unique_num + num_new_classes+ 1)))
+new_names = np.array(['background', 'tumor', 'tumor-core', 'tumor-enhancing'])
+# updated_segmentation_names = np.concatenate((segmentation_names, new_names))
+new_denoiser_labels = np.concatenate((np.array([0]), np.ones(num_new_classes)))
 
 # Save the updated files with the prefix "brats_"
-np.save(os.path.join(label_dir, f'brats_{topological_classes_path}'), updated_topological_classes)
-np.save(os.path.join(label_dir, f'brats_{segmentation_labels_path}'), updated_segmentation_labels)
-np.save(os.path.join(label_dir, f'brats_{segmentation_names_path}'), updated_segmentation_names)
-np.save(os.path.join(label_dir, f'brats_{denoiser_labels_path}'), updated_denoiser_labels)
-np.save(os.path.join(label_dir, f'brats_unique_{segmentation_labels_path}'), np.unique(updated_segmentation_labels))
+np.save(os.path.join(label_dir, f'new_brats_{topological_classes_path}'), new_topological_classes)
+np.save(os.path.join(label_dir, f'new_brats_{segmentation_labels_path}'), new_segmentation_labels)
+np.save(os.path.join(label_dir, f'new_brats_{segmentation_names_path}'), new_names)
+np.save(os.path.join(label_dir, f'new_brats_{denoiser_labels_path}'), new_denoiser_labels)
+np.save(os.path.join(label_dir, f'new_brats_unique_{segmentation_labels_path}'), np.unique(new_segmentation_labels))
 
-print("Updated label files saved with prefix 'brats_'.")
+print("Updated label files saved with prefix 'new_brats_'.")

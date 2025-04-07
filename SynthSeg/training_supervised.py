@@ -73,7 +73,7 @@ def training(image_dir,
              wl2_epochs=1,
              dice_epochs=50,
              steps_per_epoch=10000,
-             checkpoint=None):
+             checkpoint=None, freezeLayer=True):
     """
     This function trains a UNet to segment MRI images with real scans and corresponding ground truth labels.
     We regroup the parameters in four categories: General, Augmentation, Architecture, Training.
@@ -193,7 +193,7 @@ def training(image_dir,
     assert len(path_images) == len(path_labels), "There should be as many images as label maps."
 
     # get label lists
-    label_list, _ = utils.get_list_labels(label_list=segmentation_labels, labels_dir=labels_dir)
+    label_list, _ = utils.get_list_labels(label_list=segmentation_labels, labels_dir=None)
     n_labels = np.size(label_list)
 
     # create augmentation model
@@ -236,7 +236,20 @@ def training(image_dir,
                                  batch_norm=-1,
                                  name='unet')
 
+    for layer in unet_model.layers[:-2]:
+        layer.trainable = False
     # input generator
+
+    ## lr scheduling
+    def lr_scheduler(epoch, lr):
+        """Learning rate scheduler: reduce LR by half every 10 epochs."""
+        if epoch > 0 and epoch % 10 == 0:
+            return lr * 0.9
+        return lr
+
+    lr_schedule_callback = tf.keras.callbacks.LearningRateScheduler(lr_scheduler)
+
+
     generator = build_model_inputs(path_images, path_labels, batchsize, subjects_prob)
     input_generator = utils.build_training_generator(generator, batchsize)
 
@@ -244,12 +257,12 @@ def training(image_dir,
     if wl2_epochs > 0:
         wl2_model = models.Model(unet_model.inputs, [unet_model.get_layer('unet_likelihood').output])
         wl2_model = metrics.metrics_model(wl2_model, label_list, 'wl2')
-        train_model(wl2_model, input_generator, lr, wl2_epochs, steps_per_epoch, model_dir, 'wl2', checkpoint)
+        train_model(wl2_model, input_generator, lr, wl2_epochs, steps_per_epoch, model_dir, 'wl2', checkpoint, callable=lr_schedule_callback)
         checkpoint = os.path.join(model_dir, 'wl2_%03d.h5' % wl2_epochs)
 
     # fine-tuning with dice metric
     dice_model = metrics.metrics_model(unet_model, label_list, 'dice')
-    train_model(dice_model, input_generator, lr, dice_epochs, steps_per_epoch, model_dir, 'dice', checkpoint)
+    train_model(dice_model, input_generator, lr, dice_epochs, steps_per_epoch, model_dir, 'dice', checkpoint, callable=lr_schedule_callback)
 
 
 def build_augmentation_model(im_shape,

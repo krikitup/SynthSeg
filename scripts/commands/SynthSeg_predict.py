@@ -50,6 +50,7 @@ parser.add_argument("--crop", nargs='+', type=int, help="(optional) Size of 3D p
 parser.add_argument("--threads", type=int, default=1, help="(optional) Number of cores to be used. Default is 1.")
 parser.add_argument("--cpu", action="store_true", help="(optional) Enforce running with CPU rather than GPU.")
 parser.add_argument("--v1", action="store_true", help="(optional) Use SynthSeg 1.0 (updated 25/06/22).")
+parser.add_argument("--brats", action="store_true", help="(optional) Use the BraTS labels and brats model(updated 25/06/22).")
 
 # check for no arguments
 if len(sys.argv) < 2:
@@ -106,12 +107,21 @@ args['n_neutral_labels'] = 19
 # use previous model if needed
 if args['v1']:
     args['path_model_segmentation'] = os.path.join(model_dir, 'synthseg_1.0.h5')
-    args['labels_segmentation'] = args['labels_segmentation'].replace('_2.0.npy', '.npy')
+    args['labels_segmentation'] =os.path.join(labels_dir, 'synthseg_segmentation_labels_2.0.npy')
     args['labels_qc'] = args['labels_qc'].replace('_2.0.npy', '.npy')
     args['names_segmentation_labels'] = args['names_segmentation_labels'].replace('_2.0.npy', '.npy')
     args['names_qc_labels'] = args['names_qc_labels'].replace('_2.0.npy', '.npy')
     args['topology_classes'] = args['topology_classes'].replace('_2.0.npy', '.npy')
     args['n_neutral_labels'] = 18
+
+if args['brats']:
+    model_dir = os.path.join(synthseg_home, 'models/brats')
+    args['path_model_segmentation'] = os.path.join(model_dir, 'dice_050.h5')
+    args['labels_segmentation'] = os.path.join(labels_dir, 'new_brats_synthseg_segmentation_labels_2.0.npy')
+    args['labels_denoiser'] = os.path.join(labels_dir, 'new_brats_synthseg_denoiser_labels_2.0.npy')
+    args['names_segmentation_labels'] = os.path.join(labels_dir, 'new_brats_synthseg_segmentation_names_2.0.npy')
+    args['topology_classes'] = os.path.join(labels_dir, 'new_brats_synthseg_topological_classes_2.0.npy')
+    args['n_neutral_labels'] = None
 
 # run prediction
 predict(path_images=args['i'],

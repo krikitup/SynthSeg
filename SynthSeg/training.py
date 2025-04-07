@@ -23,7 +23,6 @@ import os
 import keras
 import numpy as np
 import tensorflow as tf
-import nibabel as nib
 from keras import models
 import keras.callbacks as KC
 from keras.optimizers import Adam
@@ -38,48 +37,6 @@ from ext.lab2im import utils, layers
 from ext.neuron import layers as nrn_layers
 from ext.neuron import models as nrn_models
 
-def load_data(image_dir, mask_dir):
-    """
-    Load all images and masks from the specified directories.
-    Assumes that the filenames of images and masks match.
-    """
-    image_files = sorted([f for f in os.listdir(image_dir) if f.endswith('.nii.gz')])
-    mask_files = sorted([f for f in os.listdir(mask_dir) if f.endswith('.nii.gz')])
-
-    images = []
-    masks = []
-
-    for img_file, mask_file in zip(image_files, mask_files):
-        img_path = os.path.join(image_dir, img_file)
-        mask_path = os.path.join(mask_dir, mask_file)
-
-        # Load image and mask
-        img = nib.load(img_path).get_fdata()
-        mask = nib.load(mask_path).get_fdata()
-
-        # Normalize image (optional)
-        img = (img - np.min(img)) / (np.max(img) - np.min(img))
-
-        images.append(img)
-        masks.append(mask)
-
-    return np.array(images), np.array(masks)
-
-def data_generator(images, masks, batch_size):
-    """
-    Generator that yields batches of images and masks.
-    """
-    num_samples = len(images)
-    while True:
-        for i in range(0, num_samples, batch_size):
-            batch_images = images[i:i+batch_size]
-            batch_masks = masks[i:i+batch_size]
-
-            # Add channel dimension if necessary
-            batch_images = np.expand_dims(batch_images, axis=-1)
-            batch_masks = np.expand_dims(batch_masks, axis=-1)
-
-            yield batch_images, batch_masks
 
 def training(labels_dir,
              model_dir,
@@ -269,13 +226,6 @@ def training(labels_dir,
     :param checkpoint: (optional) path of an already saved model to load before starting the training.
     """
 
-    image_dir= "data/Brats_resize/images"
-    labels_dir= "data/Brats_resize/masks"
-    images, masks = load_data(image_dir, labels_dir)
-    print(f"Loaded {len(images)} images and {len(masks)} masks.")
-
-    # Create data generator
-    train_gen = data_generator(images, masks, batchsize)
     # check epochs
     assert (wl2_epochs > 0) | (dice_epochs > 0), \
         'either wl2_epochs or dice_epochs must be positive, had {0} and {1}'.format(wl2_epochs, dice_epochs)
@@ -288,47 +238,46 @@ def training(labels_dir,
         segmentation_labels = generation_labels
     n_segmentation_labels = len(np.unique(segmentation_labels))
 
+    # instantiate BrainGenerator object
+    brain_generator = BrainGenerator(labels_dir=labels_dir,
+                                     generation_labels=generation_labels,
+                                     n_neutral_labels=n_neutral_labels,
+                                     output_labels=segmentation_labels,
+                                     subjects_prob=subjects_prob,
+                                     batchsize=batchsize,
+                                     n_channels=n_channels,
+                                     target_res=target_res,
+                                     output_shape=output_shape,
+                                     output_div_by_n=2 ** n_levels,
+                                     generation_classes=generation_classes,
+                                     prior_distributions=prior_distributions,
+                                     prior_means=prior_means,
+                                     prior_stds=prior_stds,
+                                     use_specific_stats_for_channel=use_specific_stats_for_channel,
+                                     mix_prior_and_random=mix_prior_and_random,
+                                     flipping=flipping,
+                                     scaling_bounds=scaling_bounds,
+                                     rotation_bounds=rotation_bounds,
+                                     shearing_bounds=shearing_bounds,
+                                     translation_bounds=translation_bounds,
+                                     nonlin_std=nonlin_std,
+                                     nonlin_scale=nonlin_scale,
+                                     randomise_res=randomise_res,
+                                     max_res_iso=max_res_iso,
+                                     max_res_aniso=max_res_aniso,
+                                     data_res=data_res,
+                                     thickness=thickness,
+                                     bias_field_std=bias_field_std,
+                                     bias_scale=bias_scale,
+                                     return_gradients=return_gradients)
 
-    # # instantiate BrainGenerator object
-    # brain_generator = BrainGenerator(labels_dir=labels_dir,
-    #                                  generation_labels=generation_labels,
-    #                                  n_neutral_labels=n_neutral_labels,
-    #                                  output_labels=segmentation_labels,
-    #                                  subjects_prob=subjects_prob,
-    #                                  batchsize=batchsize,
-    #                                  n_channels=n_channels,
-    #                                  target_res=target_res,
-    #                                  output_shape=output_shape,
-    #                                  output_div_by_n=2 ** n_levels,
-    #                                  generation_classes=generation_classes,
-    #                                  prior_distributions=prior_distributions,
-    #                                  prior_means=prior_means,
-    #                                  prior_stds=prior_stds,
-    #                                  use_specific_stats_for_channel=use_specific_stats_for_channel,
-    #                                  mix_prior_and_random=mix_prior_and_random,
-    #                                  flipping=flipping,
-    #                                  scaling_bounds=scaling_bounds,
-    #                                  rotation_bounds=rotation_bounds,
-    #                                  shearing_bounds=shearing_bounds,
-    #                                  translation_bounds=translation_bounds,
-    #                                  nonlin_std=nonlin_std,
-    #                                  nonlin_scale=nonlin_scale,
-    #                                  randomise_res=randomise_res,
-    #                                  max_res_iso=max_res_iso,
-    #                                  max_res_aniso=max_res_aniso,
-    #                                  data_res=data_res,
-    #                                  thickness=thickness,
-    #                                  bias_field_std=bias_field_std,
-    #                                  bias_scale=bias_scale,
-    #                                  return_gradients=return_gradients)
-
-    # # generation model
-    # labels_to_image_model = brain_generator.labels_to_image_model
-    # unet_input_shape = brain_generator.model_output_shape
+    # generation model
+    labels_to_image_model = brain_generator.labels_to_image_model
+    unet_input_shape = brain_generator.model_output_shape
 
     # prepare the segmentation model
-    unet_model = nrn_models.unet(input_model=None,
-                                 input_shape=masks.shape,
+    unet_model = nrn_models.unet(input_model=labels_to_image_model,
+                                 input_shape=unet_input_shape,
                                  nb_labels=n_segmentation_labels,
                                  nb_levels=n_levels,
                                  nb_conv_per_level=nb_conv_per_level,
@@ -340,21 +289,18 @@ def training(labels_dir,
                                  name='unet')
 
     # input generator
-
-    # input_generator = utils.build_training_generator(brain_generator.model_inputs_generator, batchsize)
+    input_generator = utils.build_training_generator(brain_generator.model_inputs_generator, batchsize)
 
     # pre-training with weighted L2, input is fit to the softmax rather than the probabilities
     if wl2_epochs > 0:
         wl2_model = models.Model(unet_model.inputs, [unet_model.get_layer('unet_likelihood').output])
         wl2_model = metrics.metrics_model(wl2_model, segmentation_labels, 'wl2')
-        # train_model(wl2_model, input_generator, lr, wl2_epochs, steps_per_epoch, model_dir, 'wl2', checkpoint)
-        train_model(wl2_model, train_gen, lr, wl2_epochs, steps_per_epoch, model_dir, 'wl2', checkpoint)
+        train_model(wl2_model, input_generator, lr, wl2_epochs, steps_per_epoch, model_dir, 'wl2', checkpoint)
         checkpoint = os.path.join(model_dir, 'wl2_%03d.h5' % wl2_epochs)
 
     # fine-tuning with dice metric
     dice_model = metrics.metrics_model(unet_model, segmentation_labels, 'dice')
-    train_model(dice_model, train_gen, lr, dice_epochs, steps_per_epoch, model_dir, 'dice', checkpoint)
-    # train_model(dice_model, input_generator, lr, dice_epochs, steps_per_epoch, model_dir, 'dice', checkpoint)
+    train_model(dice_model, input_generator, lr, dice_epochs, steps_per_epoch, model_dir, 'dice', checkpoint)
 
 
 def train_model(model,

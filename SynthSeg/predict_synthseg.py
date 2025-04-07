@@ -693,7 +693,9 @@ def postprocess(post_patch_seg, post_patch_parc, shape, pad_idx, crop_idx,
     post_patch_seg = np.squeeze(post_patch_seg)
     if fast | (topology_classes is None):
         post_patch_seg = edit_volumes.crop_volume_with_idx(post_patch_seg, pad_idx, n_dims=3, return_copy=False)
-
+    # print(labels_segmentation.shape)
+    # print(labels_segmentation)
+    # print("----------------------------------------------------------")
     # keep biggest connected component
     tmp_post_patch_seg = post_patch_seg[..., 1:]
     post_patch_seg_mask = np.sum(tmp_post_patch_seg, axis=-1) > 0.25
