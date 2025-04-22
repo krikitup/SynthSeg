@@ -235,34 +235,40 @@ def training(image_dir,
                                  activation=activation,
                                  batch_norm=-1,
                                  name='unet')
-
-    for layer in unet_model.layers[:-2]:
+    
+    for layer in unet_model.layers[2:20]:
         layer.trainable = False
-    # input generator
-
-    ## lr scheduling
-    def lr_scheduler(epoch, lr):
-        """Learning rate scheduler: reduce LR by half every 10 epochs."""
-        if epoch > 0 and epoch % 10 == 0:
-            return lr * 0.9
-        return lr
-
-    lr_schedule_callback = tf.keras.callbacks.LearningRateScheduler(lr_scheduler)
 
 
     generator = build_model_inputs(path_images, path_labels, batchsize, subjects_prob)
     input_generator = utils.build_training_generator(generator, batchsize)
+    
+
+    train_combined_model(
+        unet_model=unet_model,
+        input_generator=input_generator,
+        label_list=label_list,
+        lr=lr,
+        epochs=wl2_epochs,
+        steps_per_epoch=steps_per_epoch,
+        model_dir=model_dir,
+        checkpoint=checkpoint
+    )
+
+
 
     # pre-training with weighted L2, input is fit to the softmax rather than the probabilities
-    if wl2_epochs > 0:
-        wl2_model = models.Model(unet_model.inputs, [unet_model.get_layer('unet_likelihood').output])
-        wl2_model = metrics.metrics_model(wl2_model, label_list, 'wl2')
-        train_model(wl2_model, input_generator, lr, wl2_epochs, steps_per_epoch, model_dir, 'wl2', checkpoint, callable=lr_schedule_callback)
-        checkpoint = os.path.join(model_dir, 'wl2_%03d.h5' % wl2_epochs)
+    # if wl2_epochs > 0:
+    #     wl2_model = models.Model(unet_model.inputs, [unet_model.get_layer('unet_likelihood').output])
+    #     wl2_model = metrics.metrics_model(wl2_model, label_list, 'wl2')
+    #     train_model(wl2_model, input_generator, lr, wl2_epochs, steps_per_epoch, model_dir, 'wl2', checkpoint, callable=lr_schedule_callback)
+    #     checkpoint = os.path.join(model_dir, 'wl2_%03d.h5' % wl2_epochs)
 
-    # fine-tuning with dice metric
-    dice_model = metrics.metrics_model(unet_model, label_list, 'dice')
-    train_model(dice_model, input_generator, lr, dice_epochs, steps_per_epoch, model_dir, 'dice', checkpoint, callable=lr_schedule_callback)
+    # # fine-tuning with dice metric
+    # dice_model = metrics.metrics_model(unet_model, label_list, 'dice')
+
+
+    # train_model(dice_model, input_generator, lr, dice_epochs, steps_per_epoch, model_dir, 'dice', checkpoint, callable=lr_schedule_callback)
 
 
 def build_augmentation_model(im_shape,
@@ -369,6 +375,139 @@ def build_augmentation_model(im_shape,
 
     return brain_model
 
+def combined_loss(wl2_weight=0.5, dice_weight=0.5):
+    """
+    Creates a combined loss function with weighted contributions from WL2 and Dice losses.
+
+    :param wl2_weight: Weight for the WL2 loss.
+    :param dice_weight: Weight for the Dice loss.
+    :return: A combined loss function.
+    """
+    def loss(y_true, y_pred):
+        # WL2 loss (mean squared error)
+        wl2_loss = tf.reduce_mean(tf.square(y_true - y_pred))
+
+        # Dice loss
+        intersection = tf.reduce_sum(y_true * y_pred)
+        dice_loss = 1 - (2. * intersection + 1e-7) / (tf.reduce_sum(y_true) + tf.reduce_sum(y_pred) + 1e-7)
+
+        # Combined loss
+        return wl2_weight * wl2_loss + dice_weight * dice_loss
+
+    return loss
+
+# def train_combined_model(unet_model, input_generator, label_list, lr, epochs, steps_per_epoch, model_dir, checkpoint=None):
+#     """
+#     Trains a single model with a combined WL2 and Dice loss.
+
+#     :param unet_model: The U-Net model to train.
+#     :param input_generator: Data generator for training inputs.
+#     :param label_list: List of labels for the segmentation task.
+#     :param lr: Learning rate for training.
+#     :param epochs: Number of epochs to train.
+#     :param steps_per_epoch: Number of steps per epoch.
+#     :param model_dir: Directory to save the trained model.
+#     :param checkpoint: Path to a checkpoint to load before training (optional).
+#     """
+#     # Define the combined loss
+#     loss_function = combined_loss(wl2_weight=0.2, dice_weight=0.8)
+
+#     # Compile the model
+#     unet_model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr), loss=loss_function)
+
+#     # Load checkpoint if provided
+#     if checkpoint:
+#         unet_model.load_weights(checkpoint)
+
+#     # Define callbacks
+#     checkpoint_path = os.path.join(model_dir, 'combined_model.h5')
+#     callbacks = [
+#         tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path, save_best_only=True, monitor='loss', mode='min'),
+#         tf.keras.callbacks.LearningRateScheduler(lambda epoch, lr: lr * 0.9)# if epoch > 0 and epoch % 2 == 0 else lr)
+#     ]
+
+#     # Train the model
+#     unet_model.fit(
+#         input_generator,
+#         epochs=epochs,
+#         steps_per_epoch=steps_per_epoch,
+#         callbacks=callbacks
+#     )
+
+def train_combined_model(unet_model, input_generator, label_list, lr, epochs, steps_per_epoch, model_dir, checkpoint=None):
+    """
+    Trains a single model with a combined WL2 and Dice loss for multi-class segmentation.
+    """
+    def combined_loss(wl2_weight=0.2, dice_weight=0.8):
+        def loss(y_true, y_pred):
+            # WL2 loss
+            wl2_loss = tf.reduce_mean(tf.square(y_true - y_pred))
+            
+            # Multi-class Dice loss
+            num_classes = tf.shape(y_pred)[-1]
+            
+            # Convert targets to one-hot encoding if they're not already
+            if tf.shape(y_true)[-1] == 1:
+                y_true = tf.one_hot(tf.cast(tf.squeeze(y_true, -1), tf.int32), num_classes)
+            
+            # Calculate Dice score for each class
+            dice_scores = []
+            for i in range(num_classes):
+                y_true_class = y_true[..., i]
+                y_pred_class = y_pred[..., i]
+                
+                intersection = tf.reduce_sum(y_true_class * y_pred_class, axis=[0, 1, 2])
+                union = tf.reduce_sum(y_true_class, axis=[0, 1, 2]) + tf.reduce_sum(y_pred_class, axis=[0, 1, 2])
+                
+                dice_score = (2. * intersection + 1e-7) / (union + 1e-7)
+                dice_scores.append(dice_score)
+            
+            # Average Dice loss across all classes
+            dice_loss = 1.0 - tf.reduce_mean(dice_scores)
+            
+            # Combine losses
+            return wl2_weight * wl2_loss + dice_weight * dice_loss
+        return loss
+
+    # Compile model with the multi-class loss
+    unet_model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr), 
+                      loss=combined_loss())
+
+    # Load checkpoint if provided
+    if checkpoint is not None:
+        print(f"Loading weights from checkpoint: {checkpoint}")
+        unet_model.load_weights(checkpoint)
+
+    # Define callbacks
+    callbacks = [
+        tf.keras.callbacks.ModelCheckpoint(
+            filepath=os.path.join(model_dir, 'combined_model_{epoch:03d}.h5'),
+            save_weights_only=True,
+            save_best_only=False,
+            save_freq = 5*steps_per_epoch,
+            monitor='loss',
+            mode='min'
+        ),
+        tf.keras.callbacks.ModelCheckpoint(
+            filepath=os.path.join(model_dir, 'combined_model_best.h5'),
+            save_weights_only=True,
+            save_best_only=True,
+            monitor='loss',
+            mode='min'
+        ),
+        tf.keras.callbacks.LearningRateScheduler(lambda epoch, lr: lr * 0.9)
+    ]
+
+    # Train the model
+    history = unet_model.fit(
+        input_generator,
+        epochs=epochs,
+        steps_per_epoch=steps_per_epoch,
+        callbacks=callbacks,
+        verbose=1
+    )
+    
+    return history
 
 def build_model_inputs(path_inputs,
                        path_outputs,

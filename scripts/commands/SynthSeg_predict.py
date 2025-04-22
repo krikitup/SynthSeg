@@ -115,8 +115,8 @@ if args['v1']:
     args['n_neutral_labels'] = 18
 
 if args['brats']:
-    model_dir = os.path.join(synthseg_home, 'models/brats')
-    args['path_model_segmentation'] = os.path.join(model_dir, 'dice_050.h5')
+    model_dir = os.path.join(synthseg_home, 'models')
+    args['path_model_segmentation'] = os.path.join(model_dir, 'modified_synthseg_4ch.h5')
     args['labels_segmentation'] = os.path.join(labels_dir, 'new_brats_synthseg_segmentation_labels_2.0.npy')
     args['labels_denoiser'] = os.path.join(labels_dir, 'new_brats_synthseg_denoiser_labels_2.0.npy')
     args['names_segmentation_labels'] = os.path.join(labels_dir, 'new_brats_synthseg_segmentation_names_2.0.npy')

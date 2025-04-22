@@ -42,7 +42,7 @@ result_dir = '../../results/training'  # folder where examples will be saved
 path_label_map = '../../data/training_label_maps'
 generation_labels = '../../data/labels_classes_priors/generation_labels.npy'
 output_labels = '../../data/labels_classes_priors/synthseg_segmentation_labels.npy'
-n_neutral_labels = 18
+n_neutral_labels = 19
 output_shape = 160
 
 

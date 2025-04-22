@@ -290,6 +290,81 @@ def predict(path_images,
                             recompute=recompute,
                             verbose=verbose)
 
+# def predict_with_visualization(path_images,
+#                                path_model_segmentation,
+#                                labels_segmentation,
+#                                robust,
+#                                fast,
+#                                v1,
+#                                n_neutral_labels,
+#                                labels_denoiser,
+#                                path_posteriors,
+#                                path_resampled,
+#                                path_volumes,
+#                                do_parcellation,
+#                                path_model_parcellation,
+#                                labels_parcellation,
+#                                path_qc_scores,
+#                                path_model_qc,
+#                                labels_qc,
+#                                cropping,
+#                                ct=False,
+#                                names_segmentation=None,
+#                                names_parcellation=None,
+#                                names_qc=None,
+#                                topology_classes=None,
+#                                sigma_smoothing=0.5,
+#                                input_shape_qc=224,
+#                                gt_folder=None,
+#                                evaluation_labels=None,
+#                                mask_folder=None,
+#                                list_incorrect_labels=None,
+#                                list_correct_labels=None,
+#                                compute_distances=False,
+#                                recompute=True,
+#                                verbose=True):
+#     """
+#     Modified predict function to visualize intermediate outputs at each layer.
+#     """
+#     # Load the model
+#     model = build_model(path_model_segmentation=path_model_segmentation,
+#                         labels_segmentation=labels_segmentation,
+#                         robust=robust,
+#                         fast=fast,
+#                         v1=v1,
+#                         n_neutral_labels=n_neutral_labels,
+#                         labels_denoiser=labels_denoiser,
+#                         sigma_smoothing=sigma_smoothing,
+#                         topology_classes=topology_classes)
+
+#     # List all layers in the model
+#     layer_names = [layer.name for layer in model.layers]
+#     print(f"Model layers: {layer_names}")
+
+#     # Create a new model to output intermediate layers
+#     intermediate_model = K.function([model.input], [model.get_layer("unet_maxpool_0").output])
+#     # Load and preprocess the input images
+#     image_paths = utils.list_images_in_folder(path_images)
+#     for image_path in image_paths:
+#         # Preprocess the image
+#         image, _, _, _, _, _, _ = preprocess(image_path, ct=ct)
+
+#         # Get intermediate outputs
+#         intermediate_outputs = intermediate_model.predict(image)
+
+#         # Visualize outputs for each layer
+#         for idx, feature_map in enumerate(intermediate_outputs):
+#             num_filters = feature_map.shape[-1]
+#             print(f"Visualizing layer {layer_names[idx]} with {num_filters} filters")
+
+#             # Plot the first few filters
+#             plt.figure(figsize=(15, 15))
+#             for i in range(min(8, num_filters)):  # Show up to 8 filters
+#                 plt.subplot(1, 8, i + 1)
+#                 plt.imshow(feature_map[0, :, :, i], cmap="viridis")
+#                 plt.axis("off")
+#             plt.suptitle(f"Layer: {layer_names[idx]}")
+#             plt.show()
 
 def prepare_output_files(path_images, out_seg, out_posteriors, out_resampled, out_volumes, out_qc, recompute):
 

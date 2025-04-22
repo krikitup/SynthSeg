@@ -42,6 +42,6 @@ labels    structures
 54        right amygdala
 58        right accumbens area
 60        right ventral DC
-101       tumor-1
-102       tumor-2
-103       tumor-3
+101       tumor
+102       tumor-core
+103       tumor-enhancing

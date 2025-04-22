@@ -35,7 +35,7 @@ parser = ArgumentParser()
 
 parser.add_argument("image_dir", type=str, default="data/Brats_resize/images/", help="Directory containing input images")
 parser.add_argument("labels_dir", type=str, default="data/Brats_resize/masks/", help="Directory containing segmentation masks")
-parser.add_argument("model_dir", type=str, default="models/brats/", help="Directory for model output")
+parser.add_argument("model_dir", type=str, default="models/brats_l/", help="Directory for model output")
 
 
 # label maps parameters
@@ -80,12 +80,12 @@ parser.add_argument("--feat_mult", type=int, dest="feat_multiplier", default=2)
 parser.add_argument("--activation", type=str, dest="activation", default='elu')
 
 # ------------------------------------------------- Training parameters ------------------------------------------------
-parser.add_argument("--lr", type=float, dest="lr", default=1e-3)
-parser.add_argument("--wl2_epochs", type=int, dest="wl2_epochs", default=10)
-parser.add_argument("--dice_epochs", type=int, dest="dice_epochs", default=50)
-parser.add_argument("--steps_per_epoch", type=int, dest="steps_per_epoch", default=370)
+parser.add_argument("--lr", type=float, dest="lr", default=1e-4)
+parser.add_argument("--wl2_epochs", type=int, dest="wl2_epochs", default=20)
+parser.add_argument("--dice_epochs", type=int, dest="dice_epochs", default=40)
+parser.add_argument("--steps_per_epoch", type=int, dest="steps_per_epoch", default=1000)
 # parser.add_argument("--freezeLayer", action="store_true", dest="freezeLayer", help="Freeze all layers except the last two")
-parser.add_argument("--checkpoint", type=str, dest="checkpoint", default="models/dice_018.h5")
+parser.add_argument("--checkpoint", type=str, dest="checkpoint", default="models/modified_synthseg_4ch.h5")
 
 args = parser.parse_args()
 training(**vars(args))
