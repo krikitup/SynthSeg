@@ -34,12 +34,12 @@ parser = ArgumentParser()
 # parser.add_argument("model_dir", type=str)#, default = "models/")
 
 parser.add_argument("image_dir", type=str, default="data/Brats_resize/images/", help="Directory containing input images")
-parser.add_argument("labels_dir", type=str, default="data/Brats_resize/masks/", help="Directory containing segmentation masks")
-parser.add_argument("model_dir", type=str, default="models/brats_l/", help="Directory for model output")
+parser.add_argument("labels_dir", type=str, default="data/Brats_resize/merged/", help="Directory containing segmentation masks")
+parser.add_argument("model_dir", type=str, default="models/brats_merged/", help="Directory for model output")
 
 
 # label maps parameters
-parser.add_argument("--segmentation_labels", type=str, dest="segmentation_labels", default="data/labels_classes_priors/new_brats_synthseg_segmentation_labels_2.0.npy")
+parser.add_argument("--segmentation_labels", type=str, dest="segmentation_labels", default= None)#"data/labels_classes_priors/brats_synthseg_segmentation_labels_2.0.npy")
 parser.add_argument("--neutral_labels", type=int, dest="n_neutral_labels", default=19)
 parser.add_argument("--subjects_prob", type=str, dest="subjects_prob", default=None)
 
@@ -80,12 +80,12 @@ parser.add_argument("--feat_mult", type=int, dest="feat_multiplier", default=2)
 parser.add_argument("--activation", type=str, dest="activation", default='elu')
 
 # ------------------------------------------------- Training parameters ------------------------------------------------
-parser.add_argument("--lr", type=float, dest="lr", default=1e-4)
-parser.add_argument("--wl2_epochs", type=int, dest="wl2_epochs", default=20)
+parser.add_argument("--lr", type=float, dest="lr", default=1e-5)
+parser.add_argument("--wl2_epochs", type=int, dest="wl2_epochs", default=10)
 parser.add_argument("--dice_epochs", type=int, dest="dice_epochs", default=40)
 parser.add_argument("--steps_per_epoch", type=int, dest="steps_per_epoch", default=1000)
 # parser.add_argument("--freezeLayer", action="store_true", dest="freezeLayer", help="Freeze all layers except the last two")
-parser.add_argument("--checkpoint", type=str, dest="checkpoint", default="models/modified_synthseg_4ch.h5")
+parser.add_argument("--checkpoint", type=str, dest="checkpoint", default="models/brats_merged/dice_045.h5")
 
 args = parser.parse_args()
 training(**vars(args))
