@@ -28,14 +28,10 @@ with open("brats_training.yaml", "r") as f:
 parser = ArgumentParser()
 
 # ------------------------------------------------- General parameters -------------------------------------------------
-# Positional arguments
-# parser.add_argument("image_dir", type=str )#, default="data/Brats_resize/images")
-# parser.add_argument("labels_dir", type=str)#, default = "data/Brats_resize/masks")
-# parser.add_argument("model_dir", type=str)#, default = "models/")
 
 parser.add_argument("image_dir", type=str, default="data/Brats_resize/images/", help="Directory containing input images")
 parser.add_argument("labels_dir", type=str, default="data/Brats_resize/merged/", help="Directory containing segmentation masks")
-parser.add_argument("model_dir", type=str, default="models/brats_merged/", help="Directory for model output")
+parser.add_argument("model_dir", type=str, default="models/brats_new/", help="Directory for model output")
 
 
 # label maps parameters
@@ -50,7 +46,7 @@ parser.add_argument("--output_shape", type=int, dest="output_shape", default=Non
 
 # ----------------------------------------------- Augmentation parameters ----------------------------------------------
 # spatial deformation parameters
-parser.add_argument("--no_flipping", action='store_false', dest="flipping")
+parser.add_argument("--no_flipping", action='store_true', dest="flipping") ## changed for brats
 parser.add_argument("--scaling", dest="scaling_bounds", type=infer, default=.2)
 parser.add_argument("--rotation", dest="rotation_bounds", type=infer, default=15)
 parser.add_argument("--shearing", dest="shearing_bounds", type=infer, default=.012)
@@ -81,11 +77,11 @@ parser.add_argument("--activation", type=str, dest="activation", default='elu')
 
 # ------------------------------------------------- Training parameters ------------------------------------------------
 parser.add_argument("--lr", type=float, dest="lr", default=1e-5)
-parser.add_argument("--wl2_epochs", type=int, dest="wl2_epochs", default=10)
-parser.add_argument("--dice_epochs", type=int, dest="dice_epochs", default=40)
-parser.add_argument("--steps_per_epoch", type=int, dest="steps_per_epoch", default=1000)
+parser.add_argument("--wl2_epochs", type=int, dest="wl2_epochs", default=1)
+parser.add_argument("--dice_epochs", type=int, dest="dice_epochs", default=0)
+parser.add_argument("--steps_per_epoch", type=int, dest="steps_per_epoch", default=1)
 # parser.add_argument("--freezeLayer", action="store_true", dest="freezeLayer", help="Freeze all layers except the last two")
-parser.add_argument("--checkpoint", type=str, dest="checkpoint", default="models/brats_merged/dice_045.h5")
+parser.add_argument("--checkpoint", type=str, dest="checkpoint", default="models/synthseg_1.0.h5")
 
 args = parser.parse_args()
 training(**vars(args))

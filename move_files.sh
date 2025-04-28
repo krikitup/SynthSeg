@@ -1,17 +1,18 @@
 #!/bin/bash
 
-# Define the source and target directories relative to the script's location
-SOURCE_DIR="$(dirname "$0")/data/training"
-TARGET_DIR="$(dirname "$0")//data/labels"
+# Define the source and target directories
+source_dir="results/training"
+target_dir="results/training/images"
 
-# Create the target directory if it does not exist
-mkdir -p "$TARGET_DIR"
+# Create the target directory if it doesn't exist
+mkdir -p "$target_dir"
 
-# Move files starting with "labels" from source to target directory
-for file in "$SOURCE_DIR"/labels*; 
-do
-    if [ -e "$file" ]; then
-        mv "$file" "$TARGET_DIR"
-        echo "Moved: $file -> $TARGET_DIR"
+# Find and move all files starting with "image"
+for file in "$source_dir"/image*; do
+    if [ -f "$file" ]; then
+        mv "$file" "$target_dir"
+        echo "Moved: $file -> $target_dir"
     fi
 done
+
+echo "All files starting with 'image' have been moved to $target_dir."

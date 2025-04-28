@@ -66,7 +66,7 @@ generation_labels = '../../data/labels_classes_priors/generation_labels.npy'
 # We also have to specify the number of non-sided labels in order to differentiate them from the labels with
 # right/left values.
 # Example: (continuing the previous one): in this example it would be 3 (background, CSF, extra-cerebral soft tissues).
-n_neutral_labels = 18
+n_neutral_labels = 19
 
 # By default, the output label maps (i.e. the target segmentations) contain all the labels used for generation.
 # However, we may want not to predict all the generation labels (e.g. extra-cerebral soft tissues).
@@ -78,7 +78,7 @@ n_neutral_labels = 18
 # Note that in this example the labels 24 (CSF), and 507 (extra-cerebral soft tissues) are not predicted, or said
 # differently they are segmented as background.
 # Also, the left and right lesions (labels 25 and 57) are segmented as left and right white matter (labels 2 and 41).
-output_labels = '../../data/labels_classes_priors/synthseg_segmentation_labels.npy'
+output_labels = '../../data/labels_classes_priors/synthseg_segmentation_labels_2.0.npy'
 
 
 # ---------- Shape and resolution of the outputs ----------
