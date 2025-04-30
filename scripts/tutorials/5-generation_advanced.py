@@ -34,8 +34,8 @@ from ext.lab2im import utils
 from SynthSeg.brain_generator import BrainGenerator
 
 # script parameters
-n_examples = 20  # number of examples to generate in this script
-result_dir = '../../results/brats_generated'  # folder where examples will be saved
+n_examples = 200  # number of examples to generate in this script
+result_dir = '../../results/training'  # folder where examples will be saved
 
 
 # path training label maps
@@ -44,10 +44,10 @@ result_dir = '../../results/brats_generated'  # folder where examples will be sa
 # output_labels = '../../data/labels_classes_priors/synthseg_segmentation_labels.npy'
 # n_neutral_labels = 19
 
-path_label_map = '../../data/Brats_resize/generation_labels'
-generation_labels = '../../data/labels_classes_priors/brats_generation_labels_int32.npy'
-output_labels = '../../data/labels_classes_priors/brats_generation_labels_int32.npy'
-n_neutral_labels = 0
+path_label_map = '../../results/tumor_labels_maps'
+generation_labels = '../../data/labels_classes_priors/generation_labels_w_brats.npy'
+output_labels = '../../data/labels_classes_priors/brats_synthseg_segmentation_labels.npy'
+n_neutral_labels = 19
 output_shape = 160
 
 
@@ -62,7 +62,7 @@ prior_distributions = 'normal'
 # Note that structures with right/left labels are now associated with the same class.
 
 # generation_classes = '../../data/labels_classes_priors/generation_classes_contrast_specific.npy'
-generation_classes = '../../data/labels_classes_priors/brats_generation_classes.npy'
+generation_classes = '../../data/labels_classes_priors/generation_classes_contrast_specific_w_brats.npy'
 
 # We specify here the hyperparameters governing the prior distribution of the GMM.
 # As these prior distributions are Gaussian, they are each controlled by a mean and a standard deviation.
@@ -87,8 +87,8 @@ generation_classes = '../../data/labels_classes_priors/brats_generation_classes.
 # # same as for prior_means, but for the standard deviations of the GMM.
 # prior_stds = '../../data/labels_classes_priors/prior_stds_t1.npy'
 
-prior_means = "../../results/outputs_tutorial_6/estimated_priors_multi_modal/prior_means.npy"
-prior_stds = "../../results/outputs_tutorial_6/estimated_priors_multi_modal/prior_stds.npy"
+prior_means = "../../data/labels_classes_priors/prior_means_t1_w_brats.npy"
+prior_stds = "../../data/labels_classes_priors/prior_stds_t1_w_brats.npy"
 # ---------- Resolution parameters ----------
 
 # here we aim to synthesise data at a specific resolution, thus we do not randomise it anymore !
