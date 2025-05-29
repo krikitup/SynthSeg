@@ -67,13 +67,13 @@ from SynthSeg.estimate_priors import build_intensity_stats
 
 # Here we have multi-modal images, where every image contains all channels.
 # Channels are supposed to be sorted in the same order for all subjects.
-image_dir = 'results/training/images'
+image_dir = 'data/Brats_resize/images'
 
 # same as before
-labels_dir = 'results/training/labels'
+labels_dir = 'data/Brats_resize/modified_masks'
 estimation_labels = 'data/labels_classes_priors/only_brain_label.npy'
 # estimation_classes = '../../data/labels_classes_priors/generation_classes.npy'
-result_dir = 'results/outputs_tutorial_6/only_brain_priors'
+result_dir = 'results/outputs_tutorial_6/new_brain_priors'
 
 build_intensity_stats(list_image_dir=image_dir,
                       list_labels_dir=labels_dir,

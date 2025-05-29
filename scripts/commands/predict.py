@@ -27,7 +27,7 @@ parser.add_argument("path_model", type=str, help="model file path")
 
 # labels parameters
 parser.add_argument("labels_segmentation", type=str, help="path label list")
-parser.add_argument("--neutral_labels", type=int, dest="n_neutral_labels", default=None)
+parser.add_argument("--neutral_labels", type=int, dest="n_neutral_labels", default=18)
 parser.add_argument("--names_list", type=str, dest="names_segmentation", default=None,
                     help="path list of label names, only used if --vol is specified")
 

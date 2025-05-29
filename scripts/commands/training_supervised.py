@@ -15,17 +15,20 @@ License.
 
 
 # imports
-import yaml
+# import yaml
 from argparse import ArgumentParser
-
+# import sys
+# import os
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from ext.lab2im.utils import infer
 import importlib
 import SynthSeg.training_supervised  # Replace with the module you want to reload
 importlib.reload(SynthSeg.training_supervised)
 from SynthSeg.training_supervised import training
-with open("brats_training.yaml", "r") as f:
-    config = yaml.safe_load(f)
+# with open("brats_training.yaml", "r") as f:
+#     config = yaml.safe_load(f)
 parser = ArgumentParser()
+import os
 
 # ------------------------------------------------- General parameters -------------------------------------------------
 
@@ -35,7 +38,7 @@ parser.add_argument("model_dir", type=str, default="models/brats_new/", help="Di
 
 
 # label maps parameters
-parser.add_argument("--segmentation_labels", type=str, dest="segmentation_labels", default= None)#"data/labels_classes_priors/brats_synthseg_segmentation_labels_2.0.npy")
+parser.add_argument("--segmentation_labels", type=str, dest="segmentation_labels", default= "data/labels_classes_priors/only_brats_labels.npy")#"data/labels_classes_priors/brats_synthseg_segmentation_labels_2.0.npy")
 parser.add_argument("--neutral_labels", type=int, dest="n_neutral_labels", default=19)
 parser.add_argument("--subjects_prob", type=str, dest="subjects_prob", default=None)
 
@@ -46,7 +49,7 @@ parser.add_argument("--output_shape", type=int, dest="output_shape", default=Non
 
 # ----------------------------------------------- Augmentation parameters ----------------------------------------------
 # spatial deformation parameters
-parser.add_argument("--no_flipping", action='store_true', dest="flipping") ## changed for brats
+parser.add_argument("--no_flipping", action='store_false', dest="flipping") ## changed for brats
 parser.add_argument("--scaling", dest="scaling_bounds", type=infer, default=.2)
 parser.add_argument("--rotation", dest="rotation_bounds", type=infer, default=15)
 parser.add_argument("--shearing", dest="shearing_bounds", type=infer, default=.012)
@@ -76,12 +79,12 @@ parser.add_argument("--feat_mult", type=int, dest="feat_multiplier", default=2)
 parser.add_argument("--activation", type=str, dest="activation", default='elu')
 
 # ------------------------------------------------- Training parameters ------------------------------------------------
-parser.add_argument("--lr", type=float, dest="lr", default=1e-5)
-parser.add_argument("--wl2_epochs", type=int, dest="wl2_epochs", default=1)
-parser.add_argument("--dice_epochs", type=int, dest="dice_epochs", default=0)
-parser.add_argument("--steps_per_epoch", type=int, dest="steps_per_epoch", default=1)
+parser.add_argument("--lr", type=float, dest="lr", default=1e-4)
+parser.add_argument("--wl2_epochs", type=int, dest="wl2_epochs", default=0)
+parser.add_argument("--dice_epochs", type=int, dest="dice_epochs", default=100)
+parser.add_argument("--steps_per_epoch", type=int, dest="steps_per_epoch", default=2000)
 # parser.add_argument("--freezeLayer", action="store_true", dest="freezeLayer", help="Freeze all layers except the last two")
-parser.add_argument("--checkpoint", type=str, dest="checkpoint", default="models/synthseg_1.0.h5")
+parser.add_argument("--checkpoint", type=str, dest="checkpoint", default="models/brats5/dice_045.h5")
 
 args = parser.parse_args()
 training(**vars(args))

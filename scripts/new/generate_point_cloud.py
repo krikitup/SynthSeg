@@ -1,6 +1,9 @@
 import nibabel as nib
 import numpy as np
 from plyfile import PlyData, PlyElement
+import trimesh
+import os
+from skimage import measure
 
 def load_nifti_file(file_path):
     """Load a NIfTI file and return the image data."""
@@ -8,49 +11,41 @@ def load_nifti_file(file_path):
     data = img.get_fdata()
     return data
 
-def create_point_cloud(data):
-    """Generate a point cloud for non-zero values in the data."""
-    points = np.argwhere(data > 0)  # Get indices of non-zero values
-    values = data[data > 0]         # Get corresponding values
-    return points, values
+def save_class_meshes_from_volume(volume, output_dir="meshes", spacing=(1.0, 1.0, 1.0)):
+    """
+    Converts a 3D labeled volume into separate .ply meshes for each class.
 
-def assign_colors(values):
-    """Assign colors based on voxel values."""
-    max_value = np.max(values)
-    normalized_values = (values / max_value * 255).astype(np.uint8)
-    colors = np.zeros((len(values), 3), dtype=np.uint8)
-    colors[:, 0] = normalized_values  # Red channel
-    colors[:, 1] = 255 - normalized_values  # Green channel
-    colors[:, 2] = (normalized_values // 2)  # Blue channel
-    return colors
+    Args:
+        volume (np.ndarray): 3D array of integers (class labels).
+        output_dir (str): Directory to save output .ply files.
+        spacing (tuple): Voxel spacing along each axis (z, y, x).
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    class_ids = np.unique(volume)
+    
+    for class_id in class_ids:
+        if class_id == 0:
+            continue  # Assuming 0 is background
 
-def save_as_ply(points, colors, output_file):
-    """Save the point cloud as a PLY file."""
-    vertices = np.array(
-        [(p[0], p[1], p[2], c[0], c[1], c[2]) for p, c in zip(points, colors)],
-        dtype=[
-            ('x', 'f4'), ('y', 'f4'), ('z', 'f4'),
-            ('red', 'u1'), ('green', 'u1'), ('blue', 'u1')
-        ]
-    )
-    ply_element = PlyElement.describe(vertices, 'vertex')
-    PlyData([ply_element]).write(output_file)
+        binary_mask = (volume == class_id).astype(np.uint8)
+
+        # Extract mesh using marching cubes
+        verts, faces, normals, _ = measure.marching_cubes(binary_mask, level=0.5, spacing=spacing)
+
+        # Create and export mesh
+        mesh = trimesh.Trimesh(vertices=verts, faces=faces, vertex_normals=normals)
+        mesh.export(os.path.join(output_dir, f"class_{class_id}.ply"))
+
+    print(f"Meshes saved to {output_dir}")
 
 if __name__ == "__main__":
     # Input NIfTI file path
     nifti_file = "data/training_label_maps/training_seg_01.nii.gz"  # Replace with your file path
-    output_ply_file = "ply/training_seg_01.ply"  # Replace with desired output file name
+    output_dir = "meshes"  # Replace with desired output file name
 
-    # Load NIfTI data
-    data = load_nifti_file(nifti_file)
+    volume = nib.load(nifti_file).get_fdata()
+    
+    save_class_meshes_from_volume(volume, output_dir=output_dir)
+    
 
-    # Create point cloud
-    points, values = create_point_cloud(data)
-
-    # Assign colors
-    colors = assign_colors(values)
-
-    # Save as PLY
-    save_as_ply(points, colors, output_ply_file)
-
-    print(f"Point cloud saved to {output_ply_file}")
+    print(f"Point cloud saved to {output_dir}")

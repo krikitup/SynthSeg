@@ -47,7 +47,7 @@ result_dir = '../../results/training'  # folder where examples will be saved
 path_label_map = '../../results/tumor_labels_maps'
 generation_labels = '../../data/labels_classes_priors/generation_labels_w_brats.npy'
 output_labels = '../../data/labels_classes_priors/brats_synthseg_segmentation_labels.npy'
-n_neutral_labels = 19
+n_neutral_labels = 18
 output_shape = 160
 
 

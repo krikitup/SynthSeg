@@ -38,4 +38,4 @@ def convert_h5_to_nii(input_dir, output_dir):
         print(f"Saved: {output_path}")
 
 # Example usage
-convert_h5_to_nii("data/BraTS2020_training_data/content/data", "results/BraTS_nii")
+convert_h5_to_nii("data/BraTS2020_training_data/content/data", "data/BraTS_nii")
