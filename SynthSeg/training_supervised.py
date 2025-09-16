@@ -265,14 +265,14 @@ def training(image_dir,
     if wl2_epochs > 0:
         wl2_model = models.Model(unet_model.inputs, [unet_model.get_layer('unet_likelihood').output])
         wl2_model = metrics.metrics_model(wl2_model, label_list, 'wl2')
-        train_model(wl2_model, input_generator, lr, wl2_epochs, steps_per_epoch, model_dir, 'wl2', checkpoint, callable=lr_schedule_callback)
+        train_model(wl2_model, input_generator, lr, wl2_epochs, steps_per_epoch, model_dir, 'wl2', checkpoint)
         checkpoint = os.path.join(model_dir, 'wl2_%03d.h5' % wl2_epochs)
 
     # fine-tuning with dice metric
     dice_model = metrics.metrics_model(unet_model, label_list, 'dice')
 
 
-    train_model(dice_model, input_generator, lr, dice_epochs, steps_per_epoch, model_dir, 'dice', checkpoint, callable=lr_schedule_callback)
+    train_model(dice_model, input_generator, lr, dice_epochs, steps_per_epoch, model_dir, 'dice', checkpoint)
 
 
 def build_augmentation_model(im_shape,
